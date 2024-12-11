@@ -15,6 +15,7 @@ namespace UnityHFSM
 		private Action<HybridStateMachine<TOwnId, TStateId, TEvent>>
 			beforeOnEnter, afterOnEnter,
 			beforeOnLogic, afterOnLogic,
+			beforeOnPhysics, afterOnPhysics,
 			beforeOnExit, afterOnExit;
 
 		// Lazily initialised
@@ -40,7 +41,10 @@ namespace UnityHFSM
 				Action<HybridStateMachine<TOwnId, TStateId, TEvent>> beforeOnLogic = null,
 				Action<HybridStateMachine<TOwnId, TStateId, TEvent>> afterOnLogic = null,
 
-				Action<HybridStateMachine<TOwnId, TStateId, TEvent>> beforeOnExit= null,
+				Action<HybridStateMachine<TOwnId, TStateId, TEvent>> beforeOnPhysics = null,
+				Action<HybridStateMachine<TOwnId, TStateId, TEvent>> afterOnPhysics = null,
+
+				Action<HybridStateMachine<TOwnId, TStateId, TEvent>> beforeOnExit = null,
 				Action<HybridStateMachine<TOwnId, TStateId, TEvent>> afterOnExit = null,
 
 				bool needsExitTime = false,
@@ -53,6 +57,9 @@ namespace UnityHFSM
 
 			this.beforeOnLogic = beforeOnLogic;
 			this.afterOnLogic = afterOnLogic;
+
+			this.beforeOnPhysics = beforeOnPhysics;
+			this.afterOnPhysics = afterOnPhysics;
 
 			this.beforeOnExit = beforeOnExit;
 			this.afterOnExit = afterOnExit;
@@ -74,6 +81,13 @@ namespace UnityHFSM
 			beforeOnLogic?.Invoke(this);
 			base.OnLogic();
 			afterOnLogic?.Invoke(this);
+		}
+
+		public override void OnPhysics()
+		{
+			beforeOnPhysics?.Invoke(this);
+			base.OnPhysics();
+			afterOnPhysics?.Invoke(this);
 		}
 
 		public override void OnExit()
@@ -142,6 +156,9 @@ namespace UnityHFSM
 			Action<HybridStateMachine<TStateId, TStateId, TEvent>> beforeOnLogic = null,
 			Action<HybridStateMachine<TStateId, TStateId, TEvent>> afterOnLogic = null,
 
+			Action<HybridStateMachine<TStateId, TStateId, TEvent>> beforeOnPhysics = null,
+			Action<HybridStateMachine<TStateId, TStateId, TEvent>> afterOnPhysics = null,
+
 			Action<HybridStateMachine<TStateId, TStateId, TEvent>> beforeOnExit = null,
 			Action<HybridStateMachine<TStateId, TStateId, TEvent>> afterOnExit = null,
 
@@ -150,6 +167,7 @@ namespace UnityHFSM
 			bool rememberLastState = false) : base(
 				beforeOnEnter, afterOnEnter,
 				beforeOnLogic, afterOnLogic,
+				beforeOnPhysics, afterOnPhysics,
 				beforeOnExit, afterOnExit,
 				needsExitTime,
 				isGhostState,
@@ -170,7 +188,10 @@ namespace UnityHFSM
 			Action<HybridStateMachine<TStateId, TStateId, string>> beforeOnLogic = null,
 			Action<HybridStateMachine<TStateId, TStateId, string>> afterOnLogic = null,
 
-			Action<HybridStateMachine<TStateId, TStateId, string>> beforeOnExit= null,
+			Action<HybridStateMachine<TStateId, TStateId, string>> beforeOnPhysics = null,
+			Action<HybridStateMachine<TStateId, TStateId, string>> afterOnPhysics = null,
+
+			Action<HybridStateMachine<TStateId, TStateId, string>> beforeOnExit = null,
 			Action<HybridStateMachine<TStateId, TStateId, string>> afterOnExit = null,
 
 			bool needsExitTime = false,
@@ -178,6 +199,7 @@ namespace UnityHFSM
 			bool rememberLastState = false) : base(
 				beforeOnEnter, afterOnEnter,
 				beforeOnLogic, afterOnLogic,
+				beforeOnPhysics, afterOnPhysics,
 				beforeOnExit, afterOnExit,
 				needsExitTime,
 				isGhostState,
@@ -198,7 +220,10 @@ namespace UnityHFSM
 			Action<HybridStateMachine<string, string, string>> beforeOnLogic = null,
 			Action<HybridStateMachine<string, string, string>> afterOnLogic = null,
 
-			Action<HybridStateMachine<string, string, string>> beforeOnExit= null,
+			Action<HybridStateMachine<string, string, string>> beforeOnPhysics = null,
+			Action<HybridStateMachine<string, string, string>> afterOnPhysics = null,
+
+			Action<HybridStateMachine<string, string, string>> beforeOnExit = null,
 			Action<HybridStateMachine<string, string, string>> afterOnExit = null,
 
 			bool needsExitTime = false,
@@ -206,6 +231,7 @@ namespace UnityHFSM
 			bool rememberLastState = false) : base(
 				beforeOnEnter, afterOnEnter,
 				beforeOnLogic, afterOnLogic,
+				beforeOnPhysics, afterOnPhysics,
 				beforeOnExit, afterOnExit,
 				needsExitTime,
 				isGhostState,

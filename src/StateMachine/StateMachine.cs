@@ -418,6 +418,11 @@ namespace UnityHFSM
 			activeState?.OnLogic();
 		}
 
+		public override void OnPhysics()
+		{
+			activeState?.OnPhysics();
+		}
+
 		public override void OnExit()
 		{
 			if (activeState == null)

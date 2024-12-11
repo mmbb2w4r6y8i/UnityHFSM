@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEditor.Animations;
 using UnityEditor;
+using UnityEditor.Animations;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -16,13 +16,13 @@ namespace UnityHFSM
 		/// Prints the animator states and transitions to an Animator for easy viewing. Only call this after all states and transitions have been added!
 		/// </summary>
 		/// <param name="pathToCreateDebugAnimator">Leave this empty if you want to use the default path of Assets/DebugAnimators/</param>
-		public static void PrintToAnimator<TOwnId, TStateId, TEvent>(this StateMachine<TOwnId, TStateId, TEvent> hfsm,
+		public static AnimatorController PrintToAnimator<TOwnId, TStateId, TEvent>(this StateMachine<TOwnId, TStateId, TEvent> hfsm,
 		string pathToFolderForDebugAnimator = "", string animatorName = "StateMachineDebugger.controller")
 		{
 			if (hfsm.stateBundlesByName.Count == 0)
 			{
 				Debug.LogError("Trying to print an empty HFSM. You probably forgot to add the states and transitions before calling this method.");
-				return;
+				return null;
 			}
 
 			if (!animatorName.Contains(".controller"))
@@ -50,6 +50,7 @@ namespace UnityHFSM
 			RemoveTransitionsFromStateMachine(animatorMirror.layers[0].stateMachine);
 
 			SetupAnimatorStateMachine(animatorMirror.layers[0].stateMachine, hfsm, new(), new());
+			return animatorMirror;
 		}
 
 		//Sets up an AnimatorStateMachine based upon the HFSM supplied as a parameter. Called recursively when entering a sub-state of an HFSM
@@ -86,13 +87,15 @@ namespace UnityHFSM
 				.ForEach(transition => animatorStateMachine.AddTransitionFromAnyStateWithCondition(animatorStateDict[transition.to]));
 		}
 
-		private static void AddStateTransitionsToAnimator<TOwnId, TStateId, TEvent>(StateMachine<TOwnId, TStateId, TEvent>.StateBundle stateBundle, 
+		private static void AddStateTransitionsToAnimator<TOwnId, TStateId, TEvent>(StateMachine<TOwnId, TStateId, TEvent>.StateBundle stateBundle,
 		Dictionary<TStateId, AnimatorState> animatorStateDict, Dictionary<TStateId, AnimatorStateMachine> animatorStateMachineDict)
 		{
 			var fromState = animatorStateDict[stateBundle.state.name];
 
 			foreach (var transition in stateBundle.transitions ?? Enumerable.Empty<TransitionBase<TStateId>>())
 			{
+				if (transition.to == null)
+					continue;
 				if (animatorStateDict.ContainsKey(transition.to))
 				{
 					fromState.AddTransitionToStateWithCondition(animatorStateDict[transition.to]);
@@ -105,6 +108,8 @@ namespace UnityHFSM
 
 			foreach (var transition in stateBundle.triggerToTransitions?.Values?.SelectMany(x => x) ?? Enumerable.Empty<TransitionBase<TStateId>>())
 			{
+				if (transition.to == null)
+					continue;
 				fromState.AddTransitionToStateWithCondition(animatorStateDict[transition.to]);
 			}
 		}
@@ -135,7 +140,7 @@ namespace UnityHFSM
 		}
 
 		//Adds transitions within a nested StateMachine
-		private static void AddStateMachineTransitionsToAnimator<TOwnId, TStateId, TEvent>(StateMachine<TOwnId, TStateId, TEvent>.StateBundle stateBundle, 
+		private static void AddStateMachineTransitionsToAnimator<TOwnId, TStateId, TEvent>(StateMachine<TOwnId, TStateId, TEvent>.StateBundle stateBundle,
 		StateMachine<TOwnId, TStateId, TEvent> subFsm, Dictionary<TStateId, AnimatorStateMachine> animatorStatemachineDict, Dictionary<TStateId, AnimatorState> animatorStateDict)
 		{
 			AnimatorStateMachine animatorStateMachine = animatorStatemachineDict[stateBundle.state.name];
@@ -245,6 +250,27 @@ namespace UnityHFSM
 		{
 			AnimatorStateTransition animatorTransition = fromState.AddTransition(destinationStateMachine);
 			animatorTransition.AddCondition(AnimatorConditionMode.If, 1f, globalParameterName);
+		}
+
+		/// <summary>
+		/// Gets the active state name, even if it's a nested state of the supplied root state machine
+		/// </summary>
+		public static string GetActiveNestedStateName<TOwnId, TStateId, TEvent>(this StateMachine<TOwnId, TStateId, TEvent> rootStateMachine)
+		{
+			var nestedStateMachine = rootStateMachine.ActiveState as StateMachine<TOwnId, TStateId, TEvent>;
+			int emergencyEscape = 100;
+			while (nestedStateMachine is not null && emergencyEscape > 0)
+			{
+				var possibleNestedStateMachine = nestedStateMachine.ActiveState as StateMachine<TOwnId, TStateId, TEvent>;
+				if (possibleNestedStateMachine is not null)
+					nestedStateMachine = possibleNestedStateMachine;
+				else
+					return nestedStateMachine.ActiveStateName.ToString();
+
+				emergencyEscape--;
+			}
+
+			return rootStateMachine.ActiveStateName.ToString();
 		}
 	}
 }
